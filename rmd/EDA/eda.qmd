@@ -1,0 +1,230 @@
+---
+title: "Li-Chi Boba Shop"
+author: "Lebintiti Kobe"
+format: 
+  gfm:  
+    fig-height: 4
+    fig-width: 6
+    fig-dpi: 700
+    toc: true
+    toc-depth: 2
+    
+
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r,echo=FALSE}
+knitr::opts_chunk$set(warning = F,message = F,echo = F,error = F)
+options(scipen = 999)
+```
+
+```{r}
+require(here)
+require(tidyverse)
+require(skimr)
+require(hms)
+require(gt)
+require(gtExtras)
+require(ggthemes)
+require(extrafont)
+```
+
+```{r}
+theme_set(
+  theme_excel_new(base_family = "Arial Black" , base_size = 8) +
+    theme(
+      axis.title = element_text(face = "bold",colour = 1,size=10),
+      axis.text = element_text(size=8),
+      strip.background = element_rect(fill="grey60"),
+      strip.text = element_text(face = "bold", colour = 1),
+      axis.title.x = element_text(margin = margin(t=15)),
+      axis.title.y = element_text(margin = margin(r=15)),
+      legend.title = element_text(face = "bold"),
+      legend.text =  element_text(face = "bold")
+    )
+)
+```
+
+```{r}
+data <- read.csv(here("data/clean.csv")) %>% as_tibble()
+
+data <- data %>%
+  mutate(across(ends_with("utc"),
+                ~as_hms(.)))%>%
+  mutate(across(ends_with("time"),
+                ~as_hms(.)),
+         user_id = as.character(user_id))
+```
+
+# Overview
+
+You are the business analyst on the Strategy and Operations team for the Li-Chi Boba Shop Company. The company has physical boba shops in three cities in California, and customers place their orders via the app and pick up the orders in person.
+
+## Objective
+
+The objective of Li-Chi Boba Shop this year is to grow total sales revenue (please note that menu prices for the year have been set already). Based on the one week app data attached, please present your findings and provide a set of recommendations for growing total sales revenue. Feel free to make your own assumptions.
+
+# Data Structure
+
+***This dataset contains 1,049 customer orders across multiple cities, capturing sales, refunds, and customer ratings.***
+
+![](images/crt.png){width="400" height="500"}
+
+# Key Recommendations
+
+**Increase Customers** : ***Increase marketing/advertising effort in best performing city and store, while optimize on worst performing store to drive acquisition and retention.***
+
+-   Increase marketing/advertising effort in City A to acquire new users given it’s high orders and revenue.
+
+-   Drive traffic to store wehqk (best operational excellence) while conducting deep-dives in store acjde (worst operational excellence) to increase acquisition and retention.
+
+**Increase Order Frequency** : ***Leverage comms capabilities (email, push notifications) to increase order frequency.***
+
+-   Send email/push notifications around two order peak time (2AM-6AM and 8PM-9PM) to increase order frequency.
+
+**Increase Order Size :** ***Test benefits/promotions to increase average order size***.
+
+-   Incentivize customers (whose order size falls below 5 drinks/order) via benefits/promotions to increase the number of boba sold per order.
+
+# Analysis Approach
+
+## Breaking Down The Metric 
+
+**Sales Revenue can be broken down into *\# Units Sold x Avg Selling Price* , so do increase sales revenue we either have to *increase number of units sold or average selling price* , but prices are already set** .
+
+Therefore to increase Sales Revenue we focus on increasing number of units sold . Business opportunities that come to mind are ***Increasing number of customers , Increasing order frequency and Increasing order size .***
+
+![](images/approach.png)
+
+# Recommendations Deep Dive
+
+## Opportunity 1 : Increasing number of customers
+
+### Increase marketing spend in City A (highest demand) , to acquire new customers
+
+```{r}
+city_data <- data %>% 
+  group_by(store_city) %>%
+  summarise(total_revenue = sum(order_total),
+            total_order = length(user_id))%>%
+  mutate(total_revenue = scales::dollar(round(total_revenue)))
+
+city_tab <- city_data %>%
+  gt()%>%
+  cols_label(
+    store_city = "Store City",
+    total_revenue = "Total Revenue ($)",
+    total_order = "Total Number Of Orders"
+  ) %>%
+  gt_theme_538() %>%
+  opt_horizontal_padding(scale = 3) %>%
+  tab_options(column_labels.background.color = "grey90",
+              table.width = 450)
+
+city_tab
+```
+
+***City A has highest total revenue and number of orders (\$15K , 358) , followed by City C (\$15K , 354) then City B (\$15K , 354)***
+
+***Given City A has total revenue and number of orders , indicating high demand , we recommend increasing marketing spend / effort in City A to acquire new customers build of existing momentum***
+
+### Direct new customers to store “wehqk” (best operational excellence) , to acquire new customers and increase customer retention
+
+```{r}
+store_data <- data %>% 
+  group_by(store_id) %>%
+  summarise(total_refund = sum(refund_total),
+            avg_rating = mean(rating,na.rm=T) %>% round(2),
+            avg_prep_time = mean(order_prep_time,na.rm=T) %>% round() %>% as_hms()) %>%
+  mutate(total_refund = scales::dollar(round(total_refund)))
+
+store_tab <- store_data %>%
+  gt()%>%
+  cols_label(
+    store_id = "Store ID",
+    avg_rating = "Average Rating",
+    total_refund = "Total Refund ($)",
+    avg_prep_time = "Average Order Prep Time (h:m:s)"
+  ) %>%
+  gt_theme_538() %>%
+  opt_horizontal_padding(scale = 3)%>%
+  tab_options(column_labels.background.color = "grey90",
+              table.width = 450)
+
+store_tab
+```
+
+***Store “wehqk” has the lowest refund total , best average rating and second best average order preparation time (\$394 ,3.74 ,9m 55s)***
+
+***Given that Store “wehqk” has the best operational excellence , we recommend directing new customers gained via marketing campaigns to this store as it would leave good impressions on new users , leading to repeat orders and customer retention***
+
+### Take actions (better staff training e.t.c) in Store “wehqk” (worst operational excellence) to increase customer retention
+
+```{r}
+store_tab
+```
+
+***Store “acjde” has the highest refund total , lowest average rating and best average order preparation time (\$401, 3.16, 9m 50s)***
+
+***Given that Store “wehqk” has the worst operational excellence , we recommend looking into root causes , taking actions to improve operational excellence (better staff training , running customer surveys , e.t.c) , to improve customer retention by improving service delivery***
+
+## Opportunity 2 : Increasing number of times customers order per week
+
+### Send email / push notifications around 2AM-6AM and 8PM-9PM (popular ordering time) to increase order frequency
+
+```{r}
+order_freq_data <- data %>% 
+  count(placed_order_time_utc,sort = T)
+
+order_freq_data %>%
+  filter(n > 0 ) %>%
+  ggplot(aes(x = placed_order_time_utc,y = n,fill = n)) +
+  geom_point(position = position_jitter(),size = 1.9,shape = 21,show.legend = F,stroke = 1)+
+  scale_x_time(breaks = scales::breaks_width("3 hour")) + 
+  scale_y_continuous(limits = c(0,15))+
+  labs(y="Number of orders" , x = "Place Order Time (24 hour format)")
+  
+```
+
+***Daily place order times has two sales peaks , one around 2AM-6AM and the other at around 8PM-9PM .***
+
+***Given that daily sales peak around 2AM-6AM and 8PM-9PM , which correspond to popular ordering times , we recommend sending email / push notification reminders to our customers around these time , to increase order frequency***
+
+## Opportunity 3 : Increasing number of drinks per order
+
+### Offer exclusive promotion / offers to customers with average order size below the average , to increase number of drinks per order
+
+```{r}
+order_size_data <- data %>% 
+  group_by(user_id)%>%
+  summarise(cust_avg_order_size = mean(order_size, na.rm = T))%>%
+  arrange(cust_avg_order_size)
+
+avg_order_size <- order_size_data %>% pull(cust_avg_order_size) %>% mean() %>% round()
+
+perc_cust_less_average <- order_size_data %>%
+  filter(cust_avg_order_size < avg_order_size) %>%
+  count()%>%
+  mutate(perc_below_avg = (n / nrow(order_size_data))*100)%>%
+  mutate(perc_below_avg = scales::percent(perc_below_avg,scale = 1))%>%
+  gt()%>%
+  cols_label(perc_below_avg = "Percent (%)")%>%
+  gt_theme_538() %>%
+  tab_options(table.width = px(400))
+
+
+  
+order_size_data %>%
+  ggplot(aes(x=reorder(user_id,cust_avg_order_size),y=(cust_avg_order_size))) +
+  geom_col(colour = "lightblue")+
+  scale_x_discrete(breaks = function(x) x[seq(1, length(x), by = 50)]) + 
+  geom_hline(yintercept = avg_order_size,linewidth = 1,colour="darkred")+
+  labs(y="Number of orders" , x = "User ID")
+
+perc_cust_less_average
+```
+
+***Almost half of our customers (48%) have average order sizes below the average of 5 drinks per orders***
+
+***Given that almost half of our customers order less than 5 drinks per order , we recommend offering special promotions (e.g get 10% off when you order 5 drinks) , to increase number of drinks per order .***

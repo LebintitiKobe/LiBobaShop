@@ -65,6 +65,10 @@ You are the business analyst on the Strategy and Operations team for the Li-Chi 
 
 The objective of Li-Chi Boba Shop this year is to grow total sales revenue (please note that menu prices for the year have been set already). Based on the one week app data attached, please present your findings and provide a set of recommendations for growing total sales revenue. Feel free to make your own assumptions.
 
+## Presentation 
+
+You can find the presentation [here](https://docs.google.com/presentation/d/1bXixh3aDws4VWHOYij7Oz97LfLiuFzhbL_1g4ir8Ko0/edit?usp=sharing)
+
 # Data Structure
 
 ***This dataset contains 1,049 customer orders across multiple cities, capturing sales, refunds, and customer ratings.***
@@ -89,7 +93,7 @@ The objective of Li-Chi Boba Shop this year is to grow total sales revenue (plea
 
 # Analysis Approach
 
-## Breaking Down The Metric 
+## Breaking Down The Metric
 
 **Sales Revenue can be broken down into *\# Units Sold x Avg Selling Price* , so do increase sales revenue we either have to *increase number of units sold or average selling price* , but prices are already set** .
 

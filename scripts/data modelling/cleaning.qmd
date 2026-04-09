@@ -1,0 +1,65 @@
+---
+title: "LiBoba EDA"
+author: "Lebintiti Kobe"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+# Load in the data 
+
+## Basic Cleaning
+
+```{r}
+require(here)
+require(tidyverse)
+require(skimr)
+require(hms)
+
+data <- read.csv(here("data/data.csv")) %>% tibble()
+data <- janitor::clean_names(data)
+
+dollar_v <- data %>%
+  select(contains("total"),contains("price")) %>%
+  colnames()
+
+time_v <- data %>%
+  select(ends_with("utc")) %>%
+  colnames()
+
+for(n in dollar_v) {
+  data[,n] <- gsub("\\$","",data[[n]]) %>% as.numeric()
+}
+for(n in time_v) {
+  data[,n] <- data[[n]] %>%
+    parse_date_time("I:M:S p") %>%
+    as_hms()
+    
+}
+data %>% janitor::get_dupes()
+```
+
+## Augment the data 
+
+-  Add order prep time 
+
+```{r}
+data <- data %>%
+  mutate(order_prep_time = (finished_prep_time_utc - placed_order_time_utc) %>% as_hms(),
+         placed_order_time_utc_day = day_of_the_week)
+
+data <- data %>%
+  mutate(order_prep_time = ifelse(order_prep_time < 0,NA,order_prep_time) %>% as_hms())
+
+
+data %>% skim()
+```
+
+
+## Save clean data
+
+```{r}
+write.csv(data,"data/clean.csv",row.names = F)
+```
+
+
